@@ -46,7 +46,7 @@ export default async function Dashboard() {
       </div>
 
       {isInstructor && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Link
             href="/admin/schedule"
             className="bg-blue-600 text-white rounded-xl p-4 hover:bg-blue-700 transition-colors"
@@ -67,6 +67,13 @@ export default async function Dashboard() {
           >
             <div className="font-semibold">Add Resources</div>
             <div className="text-purple-100 text-sm mt-1">Share materials with students</div>
+          </Link>
+          <Link
+            href="/admin/students"
+            className="bg-amber-600 text-white rounded-xl p-4 hover:bg-amber-700 transition-colors"
+          >
+            <div className="font-semibold">View Students</div>
+            <div className="text-amber-100 text-sm mt-1">See enrollments & timezones</div>
           </Link>
         </div>
       )}

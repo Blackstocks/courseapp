@@ -24,6 +24,7 @@ export default function Navbar() {
     { href: "/admin/schedule", label: "Schedule" },
     { href: "/admin/lessons", label: "Lessons" },
     { href: "/admin/resources", label: "Resources" },
+    { href: "/admin/students", label: "Students" },
   ];
 
   return (
