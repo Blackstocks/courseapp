@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         @default("STUDENT") // INSTRUCTOR or STUDENT
+  timezone      String         @default("UTC")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  enrollments   Enrollment[]
+  notifications Notification[]
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  slug        String       @unique
+  color       String       @default("#3B82F6")
+  createdAt   DateTime     @default(now())
+  lessons     Lesson[]
+  resources   Resource[]
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id       String @id @default(cuid())
+  userId   String
+  courseId  String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model Lesson {
+  id            String     @id @default(cuid())
+  courseId       String
+  title         String
+  description   String     @default("")
+  scheduledAt   DateTime
+  meetLink      String     @default("")
+  recordingLink String     @default("")
+  status        String     @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  course        Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resources     Resource[]
+}
+
+model Resource {
+  id        String   @id @default(cuid())
+  courseId   String
+  lessonId  String?
+  title     String
+  type      String   // PDF, LINK, VIDEO, NOTES
+  url       String
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  type      String   // LESSON_SCHEDULED, RESOURCE_ADDED, LESSON_UPDATED
+  read      Boolean  @default(false)
+  link      String   @default("")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
