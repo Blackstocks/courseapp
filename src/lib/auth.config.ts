@@ -9,18 +9,15 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isPublicPage =
         nextUrl.pathname === "/login" || nextUrl.pathname === "/register";
-      const isAdminPage = nextUrl.pathname.startsWith("/admin");
-
-      if (isAdminPage) {
-        if (!isLoggedIn) return false;
-        return auth.user.role === "INSTRUCTOR";
-      }
 
       if (isPublicPage) {
         if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
         return true;
       }
 
+      // All other pages require login.
+      // Role-based checks (e.g. admin) are handled by layout guards
+      // since the middleware NextAuth instance lacks jwt/session callbacks.
       if (!isLoggedIn) return false;
       return true;
     },
