@@ -18,6 +18,9 @@ export default function Navbar() {
     { href: "/", label: "Dashboard" },
     { href: "/courses", label: "Courses" },
     { href: "/calendar", label: "Calendar" },
+    ...(!isInstructor
+      ? [{ href: "/extra-class", label: "Extra Class" }]
+      : []),
   ];
 
   const adminLinks = [
@@ -25,6 +28,7 @@ export default function Navbar() {
     { href: "/admin/lessons", label: "Lessons" },
     { href: "/admin/resources", label: "Resources" },
     { href: "/admin/students", label: "Students" },
+    { href: "/admin/extra-class-requests", label: "Requests" },
   ];
 
   return (
@@ -36,19 +40,26 @@ export default function Navbar() {
               CourseApp
             </Link>
             <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === link.href
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                const activeClass =
+                  link.href === "/extra-class"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-blue-50 text-blue-700";
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? activeClass
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               {isInstructor && (
                 <>
                   <div className="w-px h-6 bg-gray-200 mx-2" />
@@ -91,19 +102,26 @@ export default function Navbar() {
         </div>
         {/* Mobile nav */}
         <div className="md:hidden flex gap-1 pb-3 overflow-x-auto">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                pathname === link.href
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            const activeClass =
+              link.href === "/extra-class"
+                ? "bg-green-50 text-green-700"
+                : "bg-blue-50 text-blue-700";
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                  isActive
+                    ? activeClass
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           {isInstructor &&
             adminLinks.map((link) => (
               <Link

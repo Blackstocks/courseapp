@@ -125,6 +125,95 @@ export async function sendLessonUpdateEmail({
   });
 }
 
+export async function sendExtraClassRequestEmail({
+  to,
+  studentName,
+  courseName,
+  topic,
+  preferredDate,
+  timeRange,
+}: {
+  to: string;
+  studentName: string;
+  courseName: string;
+  topic: string;
+  preferredDate: string;
+  timeRange: string;
+}) {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>New Extra Class Request</h2>
+      <p>A student has requested an extra class:</p>
+      <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p><strong>Student:</strong> ${studentName}</p>
+        <p><strong>Course:</strong> ${courseName}</p>
+        <p><strong>Topic:</strong> ${topic}</p>
+        <p><strong>Preferred Date:</strong> ${preferredDate}</p>
+        <p><strong>Available Time:</strong> ${timeRange}</p>
+      </div>
+      <p>Review this request in the admin panel.</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to,
+    subject: `Extra Class Request: ${topic} - ${courseName}`,
+    html,
+  });
+}
+
+export async function sendExtraClassDecisionEmail({
+  to,
+  studentName,
+  courseName,
+  topic,
+  approved,
+  scheduledAt,
+  meetLink,
+  rejectionReason,
+}: {
+  to: string;
+  studentName: string;
+  courseName: string;
+  topic: string;
+  approved: boolean;
+  scheduledAt?: string;
+  meetLink?: string;
+  rejectionReason?: string;
+}) {
+  const statusColor = approved ? "#10B981" : "#EF4444";
+  const statusText = approved ? "Approved" : "Rejected";
+
+  const detailsHtml = approved
+    ? `
+        ${scheduledAt ? `<p><strong>Scheduled:</strong> ${scheduledAt}</p>` : ""}
+        ${meetLink ? `<p><strong>Meet Link:</strong> <a href="${meetLink}">${meetLink}</a></p>` : ""}
+      `
+    : `
+        ${rejectionReason ? `<p><strong>Reason:</strong> ${rejectionReason}</p>` : ""}
+      `;
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Extra Class Request ${statusText}</h2>
+      <p>Hi ${studentName},</p>
+      <p>Your extra class request has been <span style="color: ${statusColor}; font-weight: bold;">${statusText.toLowerCase()}</span>.</p>
+      <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p><strong>Course:</strong> ${courseName}</p>
+        <p><strong>Topic:</strong> ${topic}</p>
+        ${detailsHtml}
+      </div>
+      ${approved ? "<p>See you in class!</p>" : "<p>Feel free to submit another request.</p>"}
+    </div>
+  `;
+
+  await sendEmail({
+    to,
+    subject: `Extra Class ${statusText}: ${topic} - ${courseName}`,
+    html,
+  });
+}
+
 export async function sendResourceNotificationEmail({
   to,
   studentName,

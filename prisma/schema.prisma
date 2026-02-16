@@ -17,8 +17,9 @@ model User {
   timezone      String         @default("UTC")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  enrollments   Enrollment[]
-  notifications Notification[]
+  enrollments        Enrollment[]
+  notifications      Notification[]
+  extraClassRequests ExtraClassRequest[]
 }
 
 model Course {
@@ -28,9 +29,10 @@ model Course {
   slug        String       @unique
   color       String       @default("#3B82F6")
   createdAt   DateTime     @default(now())
-  lessons     Lesson[]
-  resources   Resource[]
-  enrollments Enrollment[]
+  lessons            Lesson[]
+  resources          Resource[]
+  enrollments        Enrollment[]
+  extraClassRequests ExtraClassRequest[]
 }
 
 model Enrollment {
@@ -54,8 +56,9 @@ model Lesson {
   status        String     @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-  course        Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  resources     Resource[]
+  course            Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resources         Resource[]
+  extraClassRequest ExtraClassRequest?
 }
 
 model Resource {
@@ -79,4 +82,23 @@ model Notification {
   link      String   @default("")
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExtraClassRequest {
+  id              String   @id @default(cuid())
+  studentId       String
+  courseId         String
+  preferredDate   DateTime
+  availableFrom   String
+  availableTo     String
+  topic           String
+  description     String   @default("")
+  status          String   @default("PENDING")
+  rejectionReason String   @default("")
+  lessonId        String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  student         User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson          Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
 }

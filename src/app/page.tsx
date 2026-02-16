@@ -45,8 +45,8 @@ export default async function Dashboard() {
         </p>
       </div>
 
-      {isInstructor && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {isInstructor ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <Link
             href="/admin/schedule"
             className="bg-blue-600 text-white rounded-xl p-4 hover:bg-blue-700 transition-colors"
@@ -74,6 +74,23 @@ export default async function Dashboard() {
           >
             <div className="font-semibold">View Students</div>
             <div className="text-amber-100 text-sm mt-1">See enrollments & timezones</div>
+          </Link>
+          <Link
+            href="/admin/extra-class-requests"
+            className="bg-teal-600 text-white rounded-xl p-4 hover:bg-teal-700 transition-colors"
+          >
+            <div className="font-semibold">Extra Class Requests</div>
+            <div className="text-teal-100 text-sm mt-1">Review student requests</div>
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <Link
+            href="/extra-class"
+            className="bg-green-600 text-white rounded-xl p-4 hover:bg-green-700 transition-colors"
+          >
+            <div className="font-semibold">Request Extra Class</div>
+            <div className="text-green-100 text-sm mt-1">Ask for additional sessions</div>
           </Link>
         </div>
       )}
