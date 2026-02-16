@@ -19,8 +19,10 @@ type Lesson = {
 export default function LessonManager({ lessons }: { lessons: Lesson[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   async function handleUpdate(formData: FormData) {
+    setSaving(true);
     setMessage(null);
     const result = await updateLesson(formData);
     if (result?.error) {
@@ -29,6 +31,7 @@ export default function LessonManager({ lessons }: { lessons: Lesson[] }) {
       setMessage("Lesson updated successfully!");
       setEditingId(null);
     }
+    setSaving(false);
   }
 
   const statusColors: Record<string, string> = {
@@ -128,9 +131,10 @@ export default function LessonManager({ lessons }: { lessons: Lesson[] }) {
                   </div>
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 text-sm font-medium"
+                    disabled={saving}
+                    className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium transition-colors"
                   >
-                    Save Changes
+                    {saving ? "Saving..." : "Save Changes"}
                   </button>
                 </form>
               )}
