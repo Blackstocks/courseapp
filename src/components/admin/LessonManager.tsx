@@ -32,6 +32,13 @@ export default function LessonManager({ lessons }: { lessons: Lesson[] }) {
   async function handleUpdate(formData: FormData) {
     setSaving(true);
     setMessage(null);
+
+    // Convert local datetime to UTC before sending to server
+    const localDatetime = formData.get("scheduledAt") as string;
+    if (localDatetime) {
+      formData.set("scheduledAt", new Date(localDatetime).toISOString());
+    }
+
     const result = await updateLesson(formData);
     if (result?.error) {
       setMessage(result.error);
