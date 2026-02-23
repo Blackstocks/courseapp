@@ -125,6 +125,43 @@ export async function sendLessonUpdateEmail({
   });
 }
 
+export async function sendLessonRescheduleEmail({
+  to,
+  studentName,
+  lessonTitle,
+  courseName,
+  scheduledAt,
+  meetLink,
+}: {
+  to: string;
+  studentName: string;
+  lessonTitle: string;
+  courseName: string;
+  scheduledAt: string;
+  meetLink: string;
+}) {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Class Rescheduled</h2>
+      <p>Hi ${studentName},</p>
+      <p>A class has been rescheduled. Please note the updated details:</p>
+      <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f59e0b;">
+        <p><strong>Course:</strong> ${courseName}</p>
+        <p><strong>Lesson:</strong> ${lessonTitle}</p>
+        <p><strong>New Time:</strong> ${scheduledAt}</p>
+        ${meetLink ? `<p><strong>Meet Link:</strong> <a href="${meetLink}">${meetLink}</a></p>` : ""}
+      </div>
+      <p>See you in class!</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to,
+    subject: `Class Rescheduled: ${lessonTitle} - ${courseName}`,
+    html,
+  });
+}
+
 export async function sendExtraClassRequestEmail({
   to,
   studentName,
