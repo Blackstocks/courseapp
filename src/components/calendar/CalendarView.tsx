@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -68,9 +69,11 @@ export default function CalendarView({ timezone }: { timezone: string }) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const calendarRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const hoveredEl = useRef<HTMLElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Portal needs to wait for client mount
+  useEffect(() => setMounted(true), []);
 
   const clearHideTimeout = useCallback(() => {
     if (hideTimeout.current) {
@@ -83,11 +86,10 @@ export default function CalendarView({ timezone }: { timezone: string }) {
     clearHideTimeout();
     hideTimeout.current = setTimeout(() => {
       setTooltip(null);
-      hoveredEl.current = null;
-    }, 200);
+    }, 250);
   }, [clearHideTimeout]);
 
-  // Attach mouseenter/leave on tooltip element to keep it open
+  // Keep tooltip open when hovering over it
   useEffect(() => {
     const el = tooltipRef.current;
     if (!el || !tooltip) return;
@@ -103,6 +105,8 @@ export default function CalendarView({ timezone }: { timezone: string }) {
     };
   }, [tooltip, clearHideTimeout, scheduleHide]);
 
+  // Use eventDidMount to attach hover to the stable .fc-event DOM element
+  // This avoids React re-render issues with eventContent
   const handleEventMount = useCallback(
     (info: EventMountArg) => {
       const el = info.el;
@@ -110,16 +114,14 @@ export default function CalendarView({ timezone }: { timezone: string }) {
 
       const onEnter = () => {
         clearHideTimeout();
-        hoveredEl.current = el;
 
+        // Use viewport coordinates (fixed positioning)
         const rect = el.getBoundingClientRect();
-        const containerRect = calendarRef.current?.getBoundingClientRect();
-        if (!containerRect) return;
 
-        const x = rect.left - containerRect.left + rect.width / 2;
-        const y = rect.top - containerRect.top;
-
-        setTooltipPos({ x, y });
+        setTooltipPos({
+          x: rect.left + rect.width / 2,
+          y: rect.top,
+        });
         setTooltip({
           courseTitle: event.extendedProps.courseTitle,
           lessonTitle: event.extendedProps.lessonTitle,
@@ -139,8 +141,7 @@ export default function CalendarView({ timezone }: { timezone: string }) {
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);
 
-      // Store cleanup references on the element
-      (el as HTMLElement & { _calCleanup?: () => void })._calCleanup = () => {
+      (el as HTMLElement & { _cleanup?: () => void })._cleanup = () => {
         el.removeEventListener("mouseenter", onEnter);
         el.removeEventListener("mouseleave", onLeave);
       };
@@ -149,9 +150,8 @@ export default function CalendarView({ timezone }: { timezone: string }) {
   );
 
   const handleEventUnmount = useCallback((info: EventMountArg) => {
-    const cleanup = (
-      info.el as HTMLElement & { _calCleanup?: () => void }
-    )._calCleanup;
+    const cleanup = (info.el as HTMLElement & { _cleanup?: () => void })
+      ._cleanup;
     if (cleanup) cleanup();
   }, []);
 
@@ -195,13 +195,114 @@ export default function CalendarView({ timezone }: { timezone: string }) {
     );
   }
 
-  const status = tooltip
+  const statusData = tooltip
     ? statusConfig[tooltip.status] || statusConfig.SCHEDULED
     : null;
-  const StatusIcon = status?.icon || Clock;
+  const StatusIcon = statusData?.icon || Clock;
+
+  // Render tooltip via portal to document.body so it doesn't affect calendar layout
+  const tooltipElement =
+    mounted && tooltip && statusData
+      ? createPortal(
+          <div
+            ref={tooltipRef}
+            className="fixed z-[9999] pointer-events-auto"
+            style={{
+              left: tooltipPos.x,
+              top: tooltipPos.y,
+              transform: "translate(-50%, -100%) translateY(-8px)",
+            }}
+          >
+            <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-72 overflow-hidden animate-tooltip-in">
+              <div
+                className="h-1.5"
+                style={{ backgroundColor: tooltip.color }}
+              />
+
+              <div className="p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <BookOpen
+                    size={16}
+                    className="text-gray-400 mt-0.5 flex-shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                      Course
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {tooltip.courseTitle}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-gray-800">
+                    {tooltip.lessonTitle}
+                  </p>
+                  {tooltip.description && (
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                      {tooltip.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs text-gray-600">
+                    <Clock size={13} className="text-gray-400" />
+                    {tooltip.time}
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${statusData.className}`}
+                  >
+                    <StatusIcon size={12} />
+                    {statusData.label}
+                  </span>
+                </div>
+
+                {(tooltip.meetLink || tooltip.recordingLink) && (
+                  <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+                    {tooltip.meetLink && tooltip.status === "SCHEDULED" && (
+                      <a
+                        href={tooltip.meetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Video size={13} />
+                        Join Meet
+                      </a>
+                    )}
+                    {tooltip.recordingLink &&
+                      tooltip.status === "COMPLETED" && (
+                        <a
+                          href={tooltip.recordingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <PlayCircle size={13} />
+                          Recording
+                        </a>
+                      )}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-gray-50 px-4 py-2 text-center">
+                <p className="text-[11px] text-gray-400">
+                  Click to view course details
+                </p>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
-    <div ref={calendarRef} className="relative">
+    <>
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 calendar-enhanced">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, momentTimezonePlugin]}
@@ -235,108 +336,7 @@ export default function CalendarView({ timezone }: { timezone: string }) {
           dayMaxEvents={3}
         />
       </div>
-
-      {/* Tooltip */}
-      {tooltip && status && (
-        <div
-          ref={tooltipRef}
-          className="absolute z-50"
-          style={{
-            left: tooltipPos.x,
-            top: tooltipPos.y,
-            transform: "translate(-50%, -100%) translateY(-8px)",
-          }}
-        >
-          <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-72 overflow-hidden animate-tooltip-in">
-            {/* Color bar */}
-            <div
-              className="h-1.5"
-              style={{ backgroundColor: tooltip.color }}
-            />
-
-            <div className="p-4 space-y-3">
-              {/* Course title */}
-              <div className="flex items-start gap-2">
-                <BookOpen
-                  size={16}
-                  className="text-gray-400 mt-0.5 flex-shrink-0"
-                />
-                <div className="min-w-0">
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                    Course
-                  </p>
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {tooltip.courseTitle}
-                  </p>
-                </div>
-              </div>
-
-              {/* Lesson title */}
-              <div>
-                <p className="text-sm font-medium text-gray-800">
-                  {tooltip.lessonTitle}
-                </p>
-                {tooltip.description && (
-                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                    {tooltip.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Time & Status row */}
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs text-gray-600">
-                  <Clock size={13} className="text-gray-400" />
-                  {tooltip.time}
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${status.className}`}
-                >
-                  <StatusIcon size={12} />
-                  {status.label}
-                </span>
-              </div>
-
-              {/* Action links */}
-              {(tooltip.meetLink || tooltip.recordingLink) && (
-                <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
-                  {tooltip.meetLink && tooltip.status === "SCHEDULED" && (
-                    <a
-                      href={tooltip.meetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Video size={13} />
-                      Join Meet
-                    </a>
-                  )}
-                  {tooltip.recordingLink && tooltip.status === "COMPLETED" && (
-                    <a
-                      href={tooltip.recordingLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-lg transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <PlayCircle size={13} />
-                      Recording
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Click hint */}
-            <div className="bg-gray-50 px-4 py-2 text-center">
-              <p className="text-[11px] text-gray-400">
-                Click to view course details
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      {tooltipElement}
+    </>
   );
 }
