@@ -37,3 +37,41 @@ body {
     background-position: 200% 0;
   }
 }
+
+/* Calendar tooltip animation */
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-tooltip-in {
+  animation: tooltip-in 0.15s ease-out;
+}
+
+/* Calendar event hover effects */
+.calendar-enhanced .fc-event {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 6px !important;
+  cursor: pointer;
+}
+.calendar-enhanced .fc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+.calendar-enhanced .fc-daygrid-event {
+  border-radius: 6px !important;
+}
+
+/* line-clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

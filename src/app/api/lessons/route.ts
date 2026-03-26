@@ -42,8 +42,10 @@ export async function GET(request: Request) {
       extendedProps: {
         courseTitle: lesson.course.title,
         lessonTitle: lesson.title,
+        description: lesson.description,
         status: lesson.status,
         meetLink: lesson.meetLink,
+        recordingLink: lesson.recordingLink,
       },
     }));
 
