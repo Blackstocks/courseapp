@@ -30,7 +30,7 @@ export default async function CourseDetailPage({
     where: { slug },
     include: {
       lessons: {
-        orderBy: { scheduledAt: "desc" },
+        orderBy: { scheduledAt: "asc" },
         include: { resources: true },
       },
       resources: {
