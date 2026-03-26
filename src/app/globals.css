@@ -63,38 +63,96 @@ body {
   animation: fade-in 0.2s ease-out;
 }
 
-/* Calendar tooltip animation */
-@keyframes tooltip-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-.animate-tooltip-in {
-  animation: tooltip-in 0.15s ease-out;
-}
-
-/* Calendar event hover effects */
+/* Calendar event hover */
 .calendar-enhanced .fc-event {
-  transition: box-shadow 0.15s ease;
   border-radius: 6px !important;
   cursor: pointer;
-}
-.calendar-enhanced .fc-event:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 .calendar-enhanced .fc-daygrid-event {
   border-radius: 6px !important;
 }
 
-/* line-clamp utility */
-.line-clamp-2 {
+/* Calendar tooltip — pure DOM, no React state */
+.cal-tooltip {
+  position: fixed;
+  z-index: 99999;
+  width: 280px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  pointer-events: auto;
+  animation: cal-tip-in 0.15s ease-out;
+}
+@keyframes cal-tip-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.cal-tip-bar {
+  height: 4px;
+}
+.cal-tip-body {
+  padding: 12px 14px;
+}
+.cal-tip-course {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+.cal-tip-lesson {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+.cal-tip-desc {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.cal-tip-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.cal-tip-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+.cal-tip-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+.cal-status-scheduled { background: #eff6ff; color: #2563eb; }
+.cal-status-completed { background: #f0fdf4; color: #16a34a; }
+.cal-status-cancelled { background: #fef2f2; color: #dc2626; }
+.cal-tip-actions {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+}
+.cal-tip-link {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.cal-tip-link-meet { background: #eff6ff; color: #2563eb; }
+.cal-tip-link-meet:hover { background: #dbeafe; }
+.cal-tip-link-rec { background: #faf5ff; color: #9333ea; }
+.cal-tip-link-rec:hover { background: #f3e8ff; }
