@@ -37,7 +37,7 @@ export default function NavigationProgress() {
   if (!isLoading) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-blue-100 overflow-hidden">
+    <div className="fixed top-0 left-0 md:left-64 right-0 z-[100] h-1 bg-blue-100 overflow-hidden">
       <div className="h-full bg-blue-600 rounded-r-full animate-[nav-progress_1.5s_ease-in-out_infinite]" />
     </div>
   );

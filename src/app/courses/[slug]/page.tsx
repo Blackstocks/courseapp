@@ -13,6 +13,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { ResourceIcon, resourceBgColor } from "@/components/ui/ResourceIcon";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function CourseDetailPage({
   params,
@@ -67,18 +68,14 @@ export default async function CourseDetailPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl"
-          style={{ backgroundColor: course.color }}
-        >
-          {course.title[0]}
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{course.title}</h1>
-          <p className="text-gray-500">{course.description}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={course.title}
+        description={course.description}
+        breadcrumbs={[
+          { label: "Courses", href: "/courses" },
+          { label: course.title },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Lessons */}

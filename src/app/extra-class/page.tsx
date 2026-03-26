@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import ExtraClassRequestForm from "@/components/extra-class/ExtraClassRequestForm";
 import ExtraClassRequestHistory from "@/components/extra-class/ExtraClassRequestHistory";
-import { GraduationCap, History } from "lucide-react";
+import { History } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function ExtraClassPage() {
   const session = await auth();
@@ -33,30 +34,26 @@ export default async function ExtraClassPage() {
   }));
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-          <GraduationCap size={20} className="text-green-600" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">Extra Class</h1>
-      </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <PageHeader title="Extra Class" description="Request additional class sessions" />
 
       {courses.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
           You are not enrolled in any courses yet.
         </div>
       ) : (
-        <>
-          <div className="mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
             <ExtraClassRequestForm courses={courses} />
           </div>
-
-          <div className="flex items-center gap-2 mb-4">
-            <History size={18} className="text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Your Requests</h2>
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <History size={18} className="text-gray-500" />
+              <h2 className="text-lg font-semibold text-gray-900">Your Requests</h2>
+            </div>
+            <ExtraClassRequestHistory requests={serializedRequests} />
           </div>
-          <ExtraClassRequestHistory requests={serializedRequests} />
-        </>
+        </div>
       )}
     </div>
   );

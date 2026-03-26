@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import StudentList from "@/components/admin/StudentList";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function StudentsPage() {
   const students = await prisma.user.findMany({
@@ -28,7 +29,7 @@ export default async function StudentsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Students</h1>
+      <PageHeader title="Students" />
       <StudentList students={serialized} />
     </div>
   );

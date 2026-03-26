@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, GraduationCap, FolderOpen } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function CoursesPage() {
   const session = await auth();
@@ -19,12 +20,7 @@ export default async function CoursesPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-          <BookOpen size={20} className="text-blue-600" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
-      </div>
+      <PageHeader title="Courses" badge={`${courses.length} courses`} />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {courses.map((course) => (
           <Link

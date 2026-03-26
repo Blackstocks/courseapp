@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatInTimeZone } from "date-fns-tz";
 import {
-  Sparkles,
   GraduationCap,
   BookOpen,
   Calendar as CalendarIcon,
@@ -14,6 +13,7 @@ import {
   FolderOpen,
   Video,
 } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
 import { ResourceIcon, resourceBgColor } from "@/components/ui/ResourceIcon";
 
 export default async function Dashboard() {
@@ -48,19 +48,10 @@ export default async function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-          <Sparkles size={24} className="text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, {session.user.name}
-          </h1>
-          <p className="text-gray-500 mt-0.5">
-            {formatInTimeZone(now, tz, "EEEE, MMMM d, yyyy")} &middot; {tz}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={`Welcome back, ${session.user.name}`}
+        description={`${formatInTimeZone(now, tz, "EEEE, MMMM d, yyyy")} \u00B7 ${tz}`}
+      />
 
       {isInstructor ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">

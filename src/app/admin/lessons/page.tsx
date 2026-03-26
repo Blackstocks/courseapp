@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import LessonManager from "@/components/admin/LessonManager";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function LessonsPage() {
   const lessons = await prisma.lesson.findMany({
@@ -18,7 +19,7 @@ export default async function LessonsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Manage Lessons</h1>
+      <PageHeader title="Manage Lessons" />
       <LessonManager lessons={serialized} />
     </div>
   );

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
-import Navbar from "@/components/layout/Navbar";
+import AppShell from "@/components/layout/AppShell";
 import NavigationProgress from "@/components/layout/NavigationProgress";
 
 const geistSans = Geist({
@@ -33,8 +33,7 @@ export default function RootLayout({
       >
         <Providers>
           <NavigationProgress />
-          <Navbar />
-          <main>{children}</main>
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import ExtraClassRequestManager from "@/components/admin/ExtraClassRequestManager";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function ExtraClassRequestsPage() {
   const session = await auth();
@@ -24,7 +25,7 @@ export default async function ExtraClassRequestsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Extra Class Requests</h1>
+      <PageHeader title="Extra Class Requests" />
       <ExtraClassRequestManager requests={serializedRequests} />
     </div>
   );

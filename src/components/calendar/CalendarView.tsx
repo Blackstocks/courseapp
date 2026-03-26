@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import momentTimezonePlugin from "@fullcalendar/moment-timezone";
-import { EventContentArg } from "@fullcalendar/core";
+import { EventContentArg, EventMountArg } from "@fullcalendar/core";
 import {
   Clock,
   CheckCircle,
@@ -67,43 +67,92 @@ function formatEventTime(dateStr: string, timezone: string) {
 export default function CalendarView({ timezone }: { timezone: string }) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
-  const tooltipTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const hoveredEl = useRef<HTMLElement | null>(null);
 
-  const showTooltip = useCallback(
-    (el: HTMLElement, event: EventContentArg["event"]) => {
-      if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
-
-      const rect = el.getBoundingClientRect();
-      const containerRect = calendarRef.current?.getBoundingClientRect();
-      if (!containerRect) return;
-
-      const x = rect.left - containerRect.left + rect.width / 2;
-      const y = rect.top - containerRect.top;
-
-      setTooltipPos({ x, y });
-      setTooltip({
-        courseTitle: event.extendedProps.courseTitle,
-        lessonTitle: event.extendedProps.lessonTitle,
-        description: event.extendedProps.description,
-        status: event.extendedProps.status,
-        meetLink: event.extendedProps.meetLink,
-        recordingLink: event.extendedProps.recordingLink,
-        time: event.start
-          ? formatEventTime(event.start.toISOString(), timezone)
-          : "",
-        color: event.backgroundColor || "#3b82f6",
-      });
-    },
-    [timezone]
-  );
-
-  const hideTooltip = useCallback(() => {
-    tooltipTimeout.current = setTimeout(() => setTooltip(null), 150);
+  const clearHideTimeout = useCallback(() => {
+    if (hideTimeout.current) {
+      clearTimeout(hideTimeout.current);
+      hideTimeout.current = null;
+    }
   }, []);
 
-  const keepTooltip = useCallback(() => {
-    if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
+  const scheduleHide = useCallback(() => {
+    clearHideTimeout();
+    hideTimeout.current = setTimeout(() => {
+      setTooltip(null);
+      hoveredEl.current = null;
+    }, 200);
+  }, [clearHideTimeout]);
+
+  // Attach mouseenter/leave on tooltip element to keep it open
+  useEffect(() => {
+    const el = tooltipRef.current;
+    if (!el || !tooltip) return;
+
+    const onEnter = () => clearHideTimeout();
+    const onLeave = () => scheduleHide();
+
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, [tooltip, clearHideTimeout, scheduleHide]);
+
+  const handleEventMount = useCallback(
+    (info: EventMountArg) => {
+      const el = info.el;
+      const event = info.event;
+
+      const onEnter = () => {
+        clearHideTimeout();
+        hoveredEl.current = el;
+
+        const rect = el.getBoundingClientRect();
+        const containerRect = calendarRef.current?.getBoundingClientRect();
+        if (!containerRect) return;
+
+        const x = rect.left - containerRect.left + rect.width / 2;
+        const y = rect.top - containerRect.top;
+
+        setTooltipPos({ x, y });
+        setTooltip({
+          courseTitle: event.extendedProps.courseTitle,
+          lessonTitle: event.extendedProps.lessonTitle,
+          description: event.extendedProps.description,
+          status: event.extendedProps.status,
+          meetLink: event.extendedProps.meetLink,
+          recordingLink: event.extendedProps.recordingLink,
+          time: event.start
+            ? formatEventTime(event.start.toISOString(), timezone)
+            : "",
+          color: event.backgroundColor || "#3b82f6",
+        });
+      };
+
+      const onLeave = () => scheduleHide();
+
+      el.addEventListener("mouseenter", onEnter);
+      el.addEventListener("mouseleave", onLeave);
+
+      // Store cleanup references on the element
+      (el as HTMLElement & { _calCleanup?: () => void })._calCleanup = () => {
+        el.removeEventListener("mouseenter", onEnter);
+        el.removeEventListener("mouseleave", onLeave);
+      };
+    },
+    [timezone, clearHideTimeout, scheduleHide]
+  );
+
+  const handleEventUnmount = useCallback((info: EventMountArg) => {
+    const cleanup = (
+      info.el as HTMLElement & { _calCleanup?: () => void }
+    )._calCleanup;
+    if (cleanup) cleanup();
   }, []);
 
   function renderEventContent(eventInfo: EventContentArg) {
@@ -111,13 +160,7 @@ export default function CalendarView({ timezone }: { timezone: string }) {
     const isMonth = eventInfo.view.type === "dayGridMonth";
 
     return (
-      <div
-        className="w-full px-1.5 py-0.5 cursor-pointer truncate"
-        onMouseEnter={(e) =>
-          showTooltip(e.currentTarget as HTMLElement, eventInfo.event)
-        }
-        onMouseLeave={hideTooltip}
-      >
+      <div className="w-full px-1.5 py-0.5 cursor-pointer truncate">
         {isMonth ? (
           <div className="flex items-center gap-1 truncate">
             <span
@@ -174,6 +217,8 @@ export default function CalendarView({ timezone }: { timezone: string }) {
             method: "GET",
           }}
           eventContent={renderEventContent}
+          eventDidMount={handleEventMount}
+          eventWillUnmount={handleEventUnmount}
           eventClick={(info) => {
             info.jsEvent.preventDefault();
             if (info.event.url) {
@@ -194,14 +239,13 @@ export default function CalendarView({ timezone }: { timezone: string }) {
       {/* Tooltip */}
       {tooltip && status && (
         <div
-          className="absolute z-50 pointer-events-auto"
+          ref={tooltipRef}
+          className="absolute z-50"
           style={{
             left: tooltipPos.x,
             top: tooltipPos.y,
             transform: "translate(-50%, -100%) translateY(-8px)",
           }}
-          onMouseEnter={keepTooltip}
-          onMouseLeave={hideTooltip}
         >
           <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-72 overflow-hidden animate-tooltip-in">
             {/* Color bar */}
